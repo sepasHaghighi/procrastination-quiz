@@ -41,7 +41,7 @@ function doPost(e) {
 }
 
 function doGet() {
-  return ContentService.createTextOutput("Waitlist endpoint is running.");
+  return ContentService.createTextOutput("Waitlist endpoint is running. Version 2 (with Source).");
 }
 
 // Stops values starting with = + - @ from being run as spreadsheet formulas.
