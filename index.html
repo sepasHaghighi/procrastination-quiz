@@ -129,7 +129,7 @@ input[type="email"] {
       <span class="chip">Based on CBT research on perfectionism</span>
     </div>
     <div class="row"><button class="btn" id="startBtn" type="button">Start the quiz</button></div>
-    <p class="note">This is a self-reflection tool, not a diagnosis. Your answers stay in your browser.</p>
+    <p class="note">This is a self-reflection tool, not a diagnosis. Your answers stay in your browser unless you join the waitlist.</p>
   </section>
 
   <!-- Question -->
@@ -169,8 +169,10 @@ input[type="email"] {
     <form id="waitForm" novalidate>
       <label for="email" class="muted" style="flex-basis:100%;font-size:14px">Email address</label>
       <input type="email" id="email" name="email" placeholder="you@example.com" autocomplete="email" required>
+      <input type="text" id="website" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
       <button class="btn" type="submit">Join the waitlist</button>
     </form>
+    <p class="muted" style="font-size:14px">We'll save your email and quiz result so we can send you the plan. No spam, and you can ask us to delete it any time.</p>
     <p class="status" id="formStatus" role="status"></p>
     <div class="row">
       <button class="btn ghost" id="copyBtn" type="button">Copy my result</button>
@@ -260,6 +262,9 @@ input[type="email"] {
   var idx = 0;
   var resultText = "";
   var advancing = false;
+  var lastScore = null;
+  // Google Apps Script web app URL (see waitlist-apps-script.gs). Leave empty to keep the form in prototype mode.
+  var WAITLIST_URL = "https://script.google.com/macros/s/AKfycbxMNsnFpQ_q-_kpk5GiBj-RTHb9pO_r24DiusFzz3UotP3isr5QjSlzxEl7kElXU8R3EQ/exec";
 
   var $ = function (id) { return document.getElementById(id); };
   var intro = $("intro"), quiz = $("quiz"), result = $("result");
@@ -323,6 +328,7 @@ input[type="email"] {
 
   function showResult() {
     var s = score();
+    lastScore = s;
     var p = PROFILES[s.key];
     $("rLevel").textContent = s.level;
     $("rTitle").textContent = p.title;
@@ -373,8 +379,33 @@ input[type="email"] {
       $("formStatus").textContent = "Please enter a valid email address.";
       return;
     }
-    // TODO before launch: send the email and result type to your email tool (e.g. a form or newsletter service).
-    $("formStatus").textContent = "Thanks. This is a prototype, so the waitlist isn't connected yet and your email was not saved.";
+    if (!WAITLIST_URL) {
+      $("formStatus").textContent = "Thanks. This is a prototype, so the waitlist isn't connected yet and your email was not saved.";
+      return;
+    }
+    var form = this, btn = form.querySelector("button[type=submit]");
+    var s = lastScore;
+    var data = new URLSearchParams({
+      email: email,
+      website: $("website").value,
+      type: s ? PROFILES[s.key].title : "",
+      level: s ? s.level : "",
+      P: s ? s.means.P.toFixed(1) : "", A: s ? s.means.A.toFixed(1) : "", C: s ? s.means.C.toFixed(1) : "",
+      J: s ? s.means.J.toFixed(1) : "", S: s ? s.means.S.toFixed(1) : "",
+      answers: answers.join(""),
+      page: location.origin + location.pathname
+    });
+    btn.disabled = true;
+    $("formStatus").textContent = "Saving…";
+    // no-cors: Apps Script doesn't send CORS headers, so the response can't be read. A network error still rejects.
+    fetch(WAITLIST_URL, { method: "POST", mode: "no-cors", body: data })
+      .then(function () {
+        $("formStatus").textContent = "You're on the list. We'll email you when the 14-day plan is ready.";
+        form.reset();
+      }, function () {
+        btn.disabled = false;
+        $("formStatus").textContent = "That didn't go through. Please check your connection and try again.";
+      });
   });
   document.addEventListener("keydown", function (e) {
     if (quiz.hidden) return;
