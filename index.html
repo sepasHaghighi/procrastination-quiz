@@ -175,16 +175,17 @@ input[type="email"] {
     </form>
     <p class="muted" style="font-size:14px">We'll save your email and quiz result so we can send you the plan. No spam, and you can ask us to delete it any time.</p>
     <p class="status" id="formStatus" role="status"></p>
+    <p class="muted" id="swapHint" style="font-size:14px"><b>Came here from SurveySwap?</b> Enter your email above to get your Karma code.</p>
+    <div class="note strong" id="swapCode" hidden>
+      <p><b>Came here from SurveySwap?</b> The following code gives you Karma that can be used to get free research participants at SurveySwap.io.</p>
+      <p style="margin-top:6px">Go to: <a href="https://surveyswap.io/sr/10XS-WLCA-93QF" target="_blank" rel="noopener" style="color:var(--primary)">https://surveyswap.io/sr/10XS-WLCA-93QF</a></p>
+      <p style="margin-top:6px">Or, alternatively, enter the code manually: <b style="user-select:all">10XS-WLCA-93QF</b></p>
+    </div>
     <div class="row">
       <button class="btn ghost" id="copyBtn" type="button">Copy my result</button>
       <button class="btn ghost" id="retakeBtn" type="button">Retake the quiz</button>
     </div>
     <p class="note">This quiz describes patterns, not disorders. It is not a substitute for professional advice.</p>
-    <div class="note">
-      <p><b>Came here from SurveySwap?</b> The following code gives you Karma that can be used to get free research participants at SurveySwap.io.</p>
-      <p style="margin-top:6px">Go to: <a href="https://surveyswap.io/sr/10XS-WLCA-93QF" target="_blank" rel="noopener" style="color:var(--primary)">https://surveyswap.io/sr/10XS-WLCA-93QF</a></p>
-      <p style="margin-top:6px">Or, alternatively, enter the code manually: <b style="color:var(--ink);user-select:all">10XS-WLCA-93QF</b></p>
-    </div>
   </section>
 </main>
 
@@ -421,6 +422,8 @@ input[type="email"] {
     fetch(WAITLIST_URL, { method: "POST", mode: "no-cors", body: data })
       .then(function () {
         $("formStatus").textContent = "You're on the list. We'll email you when the 14-day plan is ready.";
+        $("swapHint").hidden = true;
+        $("swapCode").hidden = false;
         form.reset();
       }, function () {
         btn.disabled = false;
