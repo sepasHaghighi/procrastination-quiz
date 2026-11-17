@@ -2,7 +2,7 @@
 // Paste this into Extensions > Apps Script of your Google Sheet, then Deploy > New deployment > Web app
 // (Execute as: Me, Who has access: Anyone). Copy the web app URL into WAITLIST_URL in index.html.
 
-var HEADERS = ["Timestamp", "Email", "Type", "Level", "Over-fixing", "Procrastinating", "Self-criticism", "Imposter", "High standards", "Answers", "Page"];
+var HEADERS = ["Timestamp", "Email", "Type", "Level", "Over-fixing", "Procrastinating", "Self-criticism", "Imposter", "High standards", "Answers", "Page", "Source"];
 
 function doPost(e) {
   var p = (e && e.parameter) || {};
@@ -18,6 +18,12 @@ function doPost(e) {
   try {
     var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheets()[0];
     if (sheet.getLastRow() === 0) sheet.appendRow(HEADERS);
+    // Sheets made before a column was added: fill in any missing header names.
+    var head = sheet.getRange(1, 1, 1, HEADERS.length);
+    var current = head.getValues()[0];
+    if (current.join() !== HEADERS.join()) {
+      head.setValues([HEADERS.map(function (h, i) { return current[i] || h; })]);
+    }
     sheet.appendRow([
       new Date(),
       clean_(email),
@@ -25,7 +31,8 @@ function doPost(e) {
       clean_(p.level),
       clean_(p.P), clean_(p.A), clean_(p.C), clean_(p.J), clean_(p.S),
       clean_(p.answers),
-      clean_(p.page)
+      clean_(p.page),
+      clean_(p.source || "unknown")
     ]);
   } finally {
     lock.releaseLock();

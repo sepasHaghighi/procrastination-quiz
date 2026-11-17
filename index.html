@@ -268,6 +268,19 @@ input[type="email"] {
   var resultText = "";
   var advancing = false;
   var lastScore = null;
+  // Where the visitor came from: ?ref= or ?utm_source= in the link, else the referring site, else "direct".
+  var SOURCE = (function () {
+    try {
+      var q = new URLSearchParams(location.search);
+      var tag = q.get("ref") || q.get("utm_source");
+      if (tag) return tag.toLowerCase().replace(/[^a-z0-9._-]/g, "").slice(0, 40) || "direct";
+      if (document.referrer) {
+        var host = new URL(document.referrer).hostname.replace(/^www\./, "");
+        if (host && host !== location.hostname) return /surveyswap/.test(host) ? "surveyswap" : host;
+      }
+    } catch (e) {}
+    return "direct";
+  })();
   // Google Apps Script web app URL (see waitlist-apps-script.gs). Leave empty to keep the form in prototype mode.
   var WAITLIST_URL = "https://script.google.com/macros/s/AKfycbxMNsnFpQ_q-_kpk5GiBj-RTHb9pO_r24DiusFzz3UotP3isr5QjSlzxEl7kElXU8R3EQ/exec";
 
@@ -398,7 +411,8 @@ input[type="email"] {
       P: s ? s.means.P.toFixed(1) : "", A: s ? s.means.A.toFixed(1) : "", C: s ? s.means.C.toFixed(1) : "",
       J: s ? s.means.J.toFixed(1) : "", S: s ? s.means.S.toFixed(1) : "",
       answers: answers.join(""),
-      page: location.origin + location.pathname
+      page: location.origin + location.pathname,
+      source: SOURCE
     });
     btn.disabled = true;
     $("formStatus").textContent = "Saving…";
